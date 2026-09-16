@@ -123,6 +123,23 @@
     gap: 12px;
   }
 
+  .identity {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 999px;
+    object-fit: cover;
+    flex: 0 0 auto;
+    border: 1px solid var(--line);
+    background: var(--surface-raised);
+  }
+
   .install-btn {
     flex: 0 0 auto;
     background: none;
@@ -399,9 +416,12 @@
 
   <header>
     <div class="header-top">
-      <div>
-        <div class="eyebrow">Personal Ledger</div>
-        <h1>Abdulaahi Muhumed</h1>
+      <div class="identity">
+        <img class="avatar" src="icons/profile-96.png" alt="Abdulaahi Muhumed">
+        <div>
+          <div class="eyebrow">Personal Ledger</div>
+          <h1>Abdulaahi Muhumed</h1>
+        </div>
       </div>
       <button class="install-btn" id="install-btn" type="button" hidden>Install App</button>
     </div>
