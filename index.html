@@ -1,0 +1,859 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rowda Finance</title>
+<meta name="description" content="A personal income and outcome tracker that stays in sync across your devices.">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1E6E52">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rowda Finance">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ground: #F5F1E7;
+    --surface: #FDFBF5;
+    --surface-raised: #FFFFFF;
+    --ink: #23281E;
+    --ink-soft: #5B5F51;
+    --line: #DFD8C4;
+    --income: #1E6E52;
+    --income-soft: #E4EDE5;
+    --outcome: #B14A2C;
+    --outcome-soft: #F3E0D2;
+    --accent: #1E6E52;
+    --accent-ink: #F5F1E7;
+    --shadow: 0 1px 2px rgba(35,40,30,0.06), 0 6px 16px -8px rgba(35,40,30,0.18);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #14180F;
+      --surface: #1B2116;
+      --surface-raised: #222A1B;
+      --ink: #EBE7D8;
+      --ink-soft: #A3A992;
+      --line: #333B28;
+      --income: #4FAE86;
+      --income-soft: #1E2E23;
+      --outcome: #E08A5E;
+      --outcome-soft: #2E2117;
+      --accent: #4FAE86;
+      --accent-ink: #0E1710;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 20px -8px rgba(0,0,0,0.5);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #14180F;
+    --surface: #1B2116;
+    --surface-raised: #222A1B;
+    --ink: #EBE7D8;
+    --ink-soft: #A3A992;
+    --line: #333B28;
+    --income: #4FAE86;
+    --income-soft: #1E2E23;
+    --outcome: #E08A5E;
+    --outcome-soft: #2E2117;
+    --accent: #4FAE86;
+    --accent-ink: #0E1710;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 20px -8px rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Work Sans", system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 640px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border-inline: 1px solid var(--line);
+  }
+
+  header {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  h1 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600;
+    font-size: 26px;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .subhead {
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    margin-top: 4px;
+  }
+
+  .icon-btn {
+    flex: 0 0 auto;
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-family: "Work Sans", system-ui, sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 2px;
+  }
+
+  .icon-btn:hover { background: var(--income-soft); color: var(--ink); }
+
+  /* ---------- summary ---------- */
+
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .stat-tile {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: var(--surface-raised);
+  }
+
+  .stat-tile .label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .stat-tile .value {
+    font-family: "IBM Plex Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    font-size: 16px;
+    margin-top: 3px;
+    overflow-wrap: anywhere;
+  }
+
+  .stat-tile.income .value { color: var(--income); }
+  .stat-tile.outcome .value { color: var(--outcome); }
+  .stat-tile.balance.positive .value { color: var(--income); }
+  .stat-tile.balance.negative .value { color: var(--outcome); }
+
+  /* ---------- composer ---------- */
+
+  .composer {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+  }
+
+  .type-toggle {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .type-btn {
+    flex: 1;
+    height: 38px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface-raised);
+    color: var(--ink-soft);
+    font-family: "Work Sans", system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 13.5px;
+    cursor: pointer;
+  }
+
+  .type-btn.active[data-type="income"] {
+    background: var(--income-soft);
+    border-color: var(--income);
+    color: var(--income);
+  }
+
+  .type-btn.active[data-type="outcome"] {
+    background: var(--outcome-soft);
+    border-color: var(--outcome);
+    color: var(--outcome);
+  }
+
+  .composer-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .field label {
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-family: "IBM Plex Mono", monospace;
+  }
+
+  input {
+    font-family: "Work Sans", system-ui, sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 9px 10px;
+  }
+
+  input:focus, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  #desc-field { flex: 1; min-width: 0; }
+  #amount-field { width: 110px; }
+  #amount-input { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; }
+
+  .add-btn {
+    width: 100%;
+    height: 42px;
+    margin-top: 10px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .add-btn:not(:disabled):hover { filter: brightness(1.08); }
+
+  .status-line {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin-top: 8px;
+    min-height: 14px;
+  }
+
+  /* ---------- list ---------- */
+
+  .list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .day-group .day-label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+
+  .day-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .tx-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    box-shadow: var(--shadow);
+  }
+
+  .tx-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    flex: 0 0 auto;
+  }
+
+  .tx-row.income .tx-dot { background: var(--income); }
+  .tx-row.outcome .tx-dot { background: var(--outcome); }
+
+  .tx-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .tx-desc {
+    font-size: 14px;
+    color: var(--ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tx-time {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10.5px;
+    color: var(--ink-soft);
+    margin-top: 1px;
+  }
+
+  .tx-amount {
+    font-family: "IBM Plex Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    font-size: 14px;
+    flex: 0 0 auto;
+  }
+
+  .tx-row.income .tx-amount { color: var(--income); }
+  .tx-row.outcome .tx-amount { color: var(--outcome); }
+
+  .tx-delete {
+    flex: 0 0 auto;
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 13px;
+    cursor: pointer;
+    padding: 2px 4px;
+  }
+
+  .tx-delete:hover { color: var(--outcome); }
+
+  .empty-state {
+    margin: auto;
+    text-align: center;
+    max-width: 300px;
+    padding: 32px 16px;
+    color: var(--ink-soft);
+  }
+
+  .empty-state .glyph {
+    font-family: "Fraunces", serif;
+    font-size: 34px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .empty-state p { font-size: 13.5px; line-height: 1.5; margin: 4px 0 0; }
+
+  [hidden] { display: none !important; }
+
+  /* ---------- auth screen ---------- */
+
+  .auth-screen {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .auth-card .eyebrow { text-align: center; }
+
+  .auth-card h1 {
+    text-align: center;
+    margin-top: 4px;
+  }
+
+  .auth-card .subhead {
+    text-align: center;
+    margin-bottom: 22px;
+  }
+
+  .auth-mode-toggle {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .auth-mode-btn {
+    flex: 1;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface-raised);
+    color: var(--ink-soft);
+    font-family: "Work Sans", system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .auth-mode-btn.active {
+    background: var(--income-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .auth-field { margin-bottom: 12px; }
+  .auth-field input { width: 100%; }
+
+  .auth-submit-btn {
+    width: 100%;
+    height: 42px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+
+  .auth-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .auth-status {
+    font-size: 12.5px;
+    color: var(--outcome);
+    margin-top: 10px;
+    min-height: 14px;
+    text-align: center;
+  }
+
+  .auth-hint {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 18px;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 460px) {
+    .app { border-inline: none; }
+    header, .summary, .composer, .list { padding-left: 16px; padding-right: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="auth-screen" id="auth-screen">
+    <div class="auth-card">
+      <div class="eyebrow">Personal Ledger</div>
+      <h1>Rowda Finance</h1>
+      <div class="subhead">Track what comes in and what goes out — synced across every device you sign into.</div>
+
+      <div class="auth-mode-toggle">
+        <button class="auth-mode-btn active" id="mode-signin-btn" type="button">Sign In</button>
+        <button class="auth-mode-btn" id="mode-signup-btn" type="button">Create Account</button>
+      </div>
+
+      <div class="auth-field">
+        <label for="auth-email">Email</label>
+        <input id="auth-email" type="email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="auth-field">
+        <label for="auth-password">Password</label>
+        <input id="auth-password" type="password" placeholder="At least 6 characters" autocomplete="current-password">
+      </div>
+
+      <button class="auth-submit-btn" id="auth-submit-btn">Sign In</button>
+      <div class="auth-status" id="auth-status"></div>
+      <div class="auth-hint">Use the same email and password on every device to see the same data everywhere.</div>
+    </div>
+  </div>
+
+  <div id="main-screen" hidden>
+    <header>
+      <div class="header-top">
+        <div>
+          <div class="eyebrow">Personal Ledger</div>
+          <h1>Rowda Finance</h1>
+        </div>
+        <button class="icon-btn" id="signout-btn" type="button">Sign Out</button>
+      </div>
+      <div class="subhead" id="account-email"></div>
+    </header>
+
+    <div class="summary">
+      <div class="stat-tile income">
+        <div class="label">Income</div>
+        <div class="value" id="total-income">$0</div>
+      </div>
+      <div class="stat-tile outcome">
+        <div class="label">Outcome</div>
+        <div class="value" id="total-outcome">$0</div>
+      </div>
+      <div class="stat-tile balance" id="balance-tile">
+        <div class="label">Balance</div>
+        <div class="value" id="total-balance">$0</div>
+      </div>
+    </div>
+
+    <div class="composer">
+      <div class="type-toggle">
+        <button class="type-btn active" id="type-income-btn" type="button" data-type="income">+ Income</button>
+        <button class="type-btn" id="type-outcome-btn" type="button" data-type="outcome">&minus; Outcome</button>
+      </div>
+      <div class="composer-row">
+        <div class="field" id="desc-field">
+          <label for="desc-input">Description</label>
+          <input id="desc-input" type="text" placeholder="e.g. Salary, groceries..." maxlength="120">
+        </div>
+        <div class="field" id="amount-field">
+          <label for="amount-input">Amount ($)</label>
+          <input id="amount-input" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00">
+        </div>
+      </div>
+      <button class="add-btn" id="add-btn">Add Transaction</button>
+      <div class="status-line" id="status-line"></div>
+    </div>
+
+    <div class="list" id="list">
+      <div class="empty-state" id="empty-state">
+        <div class="glyph">&sect;</div>
+        <p>No transactions yet. Add your first income or outcome above.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script>
+(function () {
+  const firebaseConfig = {
+    apiKey: "AIzaSyCzXUKmUuNMKtUFjp1D649poJN3xuhjK5A",
+    authDomain: "xisaabta-kooxda.firebaseapp.com",
+    projectId: "xisaabta-kooxda",
+    storageBucket: "xisaabta-kooxda.firebasestorage.app",
+    messagingSenderId: "676825911875",
+    appId: "1:676825911875:web:0b94b0342fd0689a843af6"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const authScreen = document.getElementById("auth-screen");
+  const mainScreen = document.getElementById("main-screen");
+  const modeSigninBtn = document.getElementById("mode-signin-btn");
+  const modeSignupBtn = document.getElementById("mode-signup-btn");
+  const authEmail = document.getElementById("auth-email");
+  const authPassword = document.getElementById("auth-password");
+  const authSubmitBtn = document.getElementById("auth-submit-btn");
+  const authStatus = document.getElementById("auth-status");
+  const signoutBtn = document.getElementById("signout-btn");
+  const accountEmail = document.getElementById("account-email");
+
+  const totalIncomeEl = document.getElementById("total-income");
+  const totalOutcomeEl = document.getElementById("total-outcome");
+  const totalBalanceEl = document.getElementById("total-balance");
+  const balanceTile = document.getElementById("balance-tile");
+  const typeIncomeBtn = document.getElementById("type-income-btn");
+  const typeOutcomeBtn = document.getElementById("type-outcome-btn");
+  const descInput = document.getElementById("desc-input");
+  const amountInput = document.getElementById("amount-input");
+  const addBtn = document.getElementById("add-btn");
+  const statusLine = document.getElementById("status-line");
+  const list = document.getElementById("list");
+  const emptyState = document.getElementById("empty-state");
+
+  let authMode = "signin";
+  let currentType = "income";
+  let transactions = [];
+  let unsubscribe = null;
+
+  function fmt(n) {
+    const v = Math.round(Math.abs(n) * 100) / 100;
+    return "$" + v.toLocaleString(undefined, { minimumFractionDigits: v % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 });
+  }
+
+  function setAuthMode(mode) {
+    authMode = mode;
+    modeSigninBtn.classList.toggle("active", mode === "signin");
+    modeSignupBtn.classList.toggle("active", mode === "signup");
+    authSubmitBtn.textContent = mode === "signin" ? "Sign In" : "Create Account";
+    authPassword.autocomplete = mode === "signin" ? "current-password" : "new-password";
+    authStatus.textContent = "";
+  }
+
+  modeSigninBtn.addEventListener("click", () => setAuthMode("signin"));
+  modeSignupBtn.addEventListener("click", () => setAuthMode("signup"));
+
+  async function submitAuth() {
+    const email = authEmail.value.trim();
+    const password = authPassword.value;
+    if (!email || !password) {
+      authStatus.textContent = "Enter both an email and a password.";
+      return;
+    }
+    if (password.length < 6) {
+      authStatus.textContent = "Password must be at least 6 characters.";
+      return;
+    }
+    authSubmitBtn.disabled = true;
+    authStatus.textContent = "";
+    try {
+      if (authMode === "signin") {
+        await auth.signInWithEmailAndPassword(email, password);
+      } else {
+        await auth.createUserWithEmailAndPassword(email, password);
+      }
+    } catch (e) {
+      authStatus.textContent = friendlyAuthError(e);
+    }
+    authSubmitBtn.disabled = false;
+  }
+
+  function friendlyAuthError(e) {
+    switch (e.code) {
+      case "auth/invalid-email": return "That email address looks invalid.";
+      case "auth/user-not-found": return "No account found with that email. Try Create Account.";
+      case "auth/wrong-password": return "Incorrect password.";
+      case "auth/email-already-in-use": return "That email already has an account. Try Sign In.";
+      case "auth/weak-password": return "Password must be at least 6 characters.";
+      case "auth/invalid-credential": return "Email or password is incorrect.";
+      default: return "Something went wrong. Please try again.";
+    }
+  }
+
+  authSubmitBtn.addEventListener("click", submitAuth);
+  authPassword.addEventListener("keydown", (e) => { if (e.key === "Enter") submitAuth(); });
+
+  signoutBtn.addEventListener("click", () => auth.signOut());
+
+  typeIncomeBtn.addEventListener("click", () => setType("income"));
+  typeOutcomeBtn.addEventListener("click", () => setType("outcome"));
+
+  function setType(type) {
+    currentType = type;
+    typeIncomeBtn.classList.toggle("active", type === "income");
+    typeOutcomeBtn.classList.toggle("active", type === "outcome");
+  }
+
+  function dayKey(ts) {
+    const d = new Date(ts);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + day;
+  }
+
+  function dayLabel(key) {
+    const [y, m, d] = key.split("-").map(Number);
+    const date = new Date(y, m - 1, d);
+    const today = dayKey(Date.now());
+    const yestKey = dayKey(Date.now() - 86400000);
+    if (key === today) return "Today";
+    if (key === yestKey) return "Yesterday";
+    return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  }
+
+  function timeLabel(ts) {
+    return new Date(ts).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  }
+
+  function render() {
+    let income = 0;
+    let outcome = 0;
+    for (const t of transactions) {
+      if (t.type === "income") income += t.amount;
+      else outcome += t.amount;
+    }
+    const balance = income - outcome;
+    totalIncomeEl.textContent = fmt(income);
+    totalOutcomeEl.textContent = fmt(outcome);
+    totalBalanceEl.textContent = (balance < 0 ? "-" : "") + fmt(balance);
+    balanceTile.classList.toggle("positive", balance >= 0);
+    balanceTile.classList.toggle("negative", balance < 0);
+
+    list.innerHTML = "";
+    if (transactions.length === 0) {
+      list.appendChild(emptyState);
+      return;
+    }
+
+    const byDay = new Map();
+    for (const t of transactions) {
+      const key = dayKey(t.createdAt);
+      if (!byDay.has(key)) byDay.set(key, []);
+      byDay.get(key).push(t);
+    }
+    const days = Array.from(byDay.keys()).sort((a, b) => b.localeCompare(a));
+    for (const key of days) {
+      const group = document.createElement("div");
+      group.className = "day-group";
+      const label = document.createElement("div");
+      label.className = "day-label";
+      label.textContent = dayLabel(key);
+      group.appendChild(label);
+
+      const rows = document.createElement("div");
+      rows.className = "day-rows";
+      const items = byDay.get(key).slice().sort((a, b) => b.createdAt - a.createdAt);
+      for (const t of items) {
+        const row = document.createElement("div");
+        row.className = "tx-row " + t.type;
+        const dot = document.createElement("div");
+        dot.className = "tx-dot";
+        const main = document.createElement("div");
+        main.className = "tx-main";
+        const desc = document.createElement("div");
+        desc.className = "tx-desc";
+        desc.textContent = t.description || (t.type === "income" ? "Income" : "Outcome");
+        const time = document.createElement("div");
+        time.className = "tx-time";
+        time.textContent = timeLabel(t.createdAt);
+        main.appendChild(desc);
+        main.appendChild(time);
+        const amt = document.createElement("div");
+        amt.className = "tx-amount";
+        amt.textContent = (t.type === "income" ? "+" : "−") + fmt(t.amount);
+        const del = document.createElement("button");
+        del.className = "tx-delete";
+        del.type = "button";
+        del.title = "Delete";
+        del.textContent = "✕";
+        del.addEventListener("click", () => deleteTransaction(t.id));
+        row.appendChild(dot);
+        row.appendChild(main);
+        row.appendChild(amt);
+        row.appendChild(del);
+        rows.appendChild(row);
+      }
+      group.appendChild(rows);
+      list.appendChild(group);
+    }
+  }
+
+  async function addTransaction() {
+    const description = descInput.value.trim();
+    const amount = parseFloat(amountInput.value);
+    if (!amount || amount <= 0) {
+      statusLine.textContent = "Enter an amount greater than zero.";
+      return;
+    }
+    const user = auth.currentUser;
+    if (!user) return;
+    addBtn.disabled = true;
+    statusLine.textContent = "Adding...";
+    try {
+      await db.collection("transactions").add({
+        ownerUid: user.uid,
+        type: currentType,
+        amount: amount,
+        description: description || null,
+        createdAt: Date.now(),
+      });
+      descInput.value = "";
+      amountInput.value = "";
+      statusLine.textContent = "";
+      descInput.focus();
+    } catch (e) {
+      statusLine.textContent = "Adding failed, please try again.";
+      console.error(e);
+    }
+    addBtn.disabled = false;
+  }
+
+  addBtn.addEventListener("click", addTransaction);
+  amountInput.addEventListener("keydown", (e) => { if (e.key === "Enter") addTransaction(); });
+  descInput.addEventListener("keydown", (e) => { if (e.key === "Enter") addTransaction(); });
+
+  async function deleteTransaction(id) {
+    if (!confirm("Delete this transaction?")) return;
+    try {
+      await db.collection("transactions").doc(id).delete();
+    } catch (e) {
+      statusLine.textContent = "Deleting failed, please try again.";
+      console.error(e);
+    }
+  }
+
+  auth.onAuthStateChanged((user) => {
+    if (unsubscribe) {
+      unsubscribe();
+      unsubscribe = null;
+    }
+    if (user) {
+      authScreen.hidden = true;
+      mainScreen.hidden = false;
+      accountEmail.textContent = user.email;
+      transactions = [];
+      render();
+      unsubscribe = db.collection("transactions")
+        .where("ownerUid", "==", user.uid)
+        .onSnapshot(
+          (snap) => {
+            transactions = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+            render();
+          },
+          (err) => {
+            statusLine.textContent = "Something went wrong while loading your data.";
+            console.error(err);
+          }
+        );
+    } else {
+      mainScreen.hidden = true;
+      authScreen.hidden = false;
+      authEmail.focus();
+    }
+  });
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    });
+  }
+})();
+</script>
+</body>
+</html>
