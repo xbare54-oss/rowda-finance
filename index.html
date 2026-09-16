@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rowda Finance</title>
-<meta name="description" content="A personal income and outcome tracker that stays in sync across your devices.">
+<meta name="description" content="A personal income and outcome tracker.">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1E6E52">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
@@ -94,13 +94,6 @@
     border-bottom: 1px solid var(--line);
   }
 
-  .header-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-  }
-
   .eyebrow {
     font-family: "IBM Plex Mono", monospace;
     font-size: 11px;
@@ -122,22 +115,6 @@
     font-size: 13.5px;
     margin-top: 4px;
   }
-
-  .icon-btn {
-    flex: 0 0 auto;
-    background: none;
-    border: 1px solid var(--line);
-    color: var(--ink-soft);
-    border-radius: 8px;
-    padding: 7px 12px;
-    font-family: "Work Sans", system-ui, sans-serif;
-    font-size: 12.5px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 2px;
-  }
-
-  .icon-btn:hover { background: var(--income-soft); color: var(--ink); }
 
   /* ---------- summary ---------- */
 
@@ -387,92 +364,6 @@
 
   [hidden] { display: none !important; }
 
-  /* ---------- auth screen ---------- */
-
-  .auth-screen {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
-
-  .auth-card {
-    width: 100%;
-    max-width: 320px;
-  }
-
-  .auth-card .eyebrow { text-align: center; }
-
-  .auth-card h1 {
-    text-align: center;
-    margin-top: 4px;
-  }
-
-  .auth-card .subhead {
-    text-align: center;
-    margin-bottom: 22px;
-  }
-
-  .auth-mode-toggle {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-
-  .auth-mode-btn {
-    flex: 1;
-    height: 36px;
-    border-radius: 8px;
-    border: 1px solid var(--line);
-    background: var(--surface-raised);
-    color: var(--ink-soft);
-    font-family: "Work Sans", system-ui, sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-  }
-
-  .auth-mode-btn.active {
-    background: var(--income-soft);
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  .auth-field { margin-bottom: 12px; }
-  .auth-field input { width: 100%; }
-
-  .auth-submit-btn {
-    width: 100%;
-    height: 42px;
-    background: var(--accent);
-    color: var(--accent-ink);
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    margin-top: 4px;
-  }
-
-  .auth-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  .auth-status {
-    font-size: 12.5px;
-    color: var(--outcome);
-    margin-top: 10px;
-    min-height: 14px;
-    text-align: center;
-  }
-
-  .auth-hint {
-    font-size: 12px;
-    color: var(--ink-soft);
-    margin-top: 18px;
-    text-align: center;
-    line-height: 1.5;
-  }
-
   @media (max-width: 460px) {
     .app { border-inline: none; }
     header, .summary, .composer, .list { padding-left: 16px; padding-right: 16px; }
@@ -483,115 +374,58 @@
 
 <div class="app">
 
-  <div class="auth-screen" id="auth-screen">
-    <div class="auth-card">
-      <div class="eyebrow">Personal Ledger</div>
-      <h1>Rowda Finance</h1>
-      <div class="subhead">Track what comes in and what goes out — synced across every device you sign into.</div>
+  <header>
+    <div class="eyebrow">Personal Ledger</div>
+    <h1>Rowda Finance</h1>
+    <div class="subhead">Track what comes in and what goes out.</div>
+  </header>
 
-      <div class="auth-mode-toggle">
-        <button class="auth-mode-btn active" id="mode-signin-btn" type="button">Sign In</button>
-        <button class="auth-mode-btn" id="mode-signup-btn" type="button">Create Account</button>
-      </div>
-
-      <div class="auth-field">
-        <label for="auth-email">Email</label>
-        <input id="auth-email" type="email" placeholder="you@example.com" autocomplete="email">
-      </div>
-      <div class="auth-field">
-        <label for="auth-password">Password</label>
-        <input id="auth-password" type="password" placeholder="At least 6 characters" autocomplete="current-password">
-      </div>
-
-      <button class="auth-submit-btn" id="auth-submit-btn">Sign In</button>
-      <div class="auth-status" id="auth-status"></div>
-      <div class="auth-hint">Use the same email and password on every device to see the same data everywhere.</div>
+  <div class="summary">
+    <div class="stat-tile income">
+      <div class="label">Income</div>
+      <div class="value" id="total-income">$0</div>
+    </div>
+    <div class="stat-tile outcome">
+      <div class="label">Outcome</div>
+      <div class="value" id="total-outcome">$0</div>
+    </div>
+    <div class="stat-tile balance" id="balance-tile">
+      <div class="label">Balance</div>
+      <div class="value" id="total-balance">$0</div>
     </div>
   </div>
 
-  <div id="main-screen" hidden>
-    <header>
-      <div class="header-top">
-        <div>
-          <div class="eyebrow">Personal Ledger</div>
-          <h1>Rowda Finance</h1>
-        </div>
-        <button class="icon-btn" id="signout-btn" type="button">Sign Out</button>
+  <div class="composer">
+    <div class="type-toggle">
+      <button class="type-btn active" id="type-income-btn" type="button" data-type="income">+ Income</button>
+      <button class="type-btn" id="type-outcome-btn" type="button" data-type="outcome">&minus; Outcome</button>
+    </div>
+    <div class="composer-row">
+      <div class="field" id="desc-field">
+        <label for="desc-input">Description</label>
+        <input id="desc-input" type="text" placeholder="e.g. Salary, groceries..." maxlength="120">
       </div>
-      <div class="subhead" id="account-email"></div>
-    </header>
-
-    <div class="summary">
-      <div class="stat-tile income">
-        <div class="label">Income</div>
-        <div class="value" id="total-income">$0</div>
-      </div>
-      <div class="stat-tile outcome">
-        <div class="label">Outcome</div>
-        <div class="value" id="total-outcome">$0</div>
-      </div>
-      <div class="stat-tile balance" id="balance-tile">
-        <div class="label">Balance</div>
-        <div class="value" id="total-balance">$0</div>
+      <div class="field" id="amount-field">
+        <label for="amount-input">Amount ($)</label>
+        <input id="amount-input" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00">
       </div>
     </div>
+    <button class="add-btn" id="add-btn">Add Transaction</button>
+    <div class="status-line" id="status-line"></div>
+  </div>
 
-    <div class="composer">
-      <div class="type-toggle">
-        <button class="type-btn active" id="type-income-btn" type="button" data-type="income">+ Income</button>
-        <button class="type-btn" id="type-outcome-btn" type="button" data-type="outcome">&minus; Outcome</button>
-      </div>
-      <div class="composer-row">
-        <div class="field" id="desc-field">
-          <label for="desc-input">Description</label>
-          <input id="desc-input" type="text" placeholder="e.g. Salary, groceries..." maxlength="120">
-        </div>
-        <div class="field" id="amount-field">
-          <label for="amount-input">Amount ($)</label>
-          <input id="amount-input" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00">
-        </div>
-      </div>
-      <button class="add-btn" id="add-btn">Add Transaction</button>
-      <div class="status-line" id="status-line"></div>
-    </div>
-
-    <div class="list" id="list">
-      <div class="empty-state" id="empty-state">
-        <div class="glyph">&sect;</div>
-        <p>No transactions yet. Add your first income or outcome above.</p>
-      </div>
+  <div class="list" id="list">
+    <div class="empty-state" id="empty-state">
+      <div class="glyph">&sect;</div>
+      <p>No transactions yet. Add your first income or outcome above.</p>
     </div>
   </div>
 
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script>
 (function () {
-  const firebaseConfig = {
-    apiKey: "AIzaSyCzXUKmUuNMKtUFjp1D649poJN3xuhjK5A",
-    authDomain: "xisaabta-kooxda.firebaseapp.com",
-    projectId: "xisaabta-kooxda",
-    storageBucket: "xisaabta-kooxda.firebasestorage.app",
-    messagingSenderId: "676825911875",
-    appId: "1:676825911875:web:0b94b0342fd0689a843af6"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-
-  const authScreen = document.getElementById("auth-screen");
-  const mainScreen = document.getElementById("main-screen");
-  const modeSigninBtn = document.getElementById("mode-signin-btn");
-  const modeSignupBtn = document.getElementById("mode-signup-btn");
-  const authEmail = document.getElementById("auth-email");
-  const authPassword = document.getElementById("auth-password");
-  const authSubmitBtn = document.getElementById("auth-submit-btn");
-  const authStatus = document.getElementById("auth-status");
-  const signoutBtn = document.getElementById("signout-btn");
-  const accountEmail = document.getElementById("account-email");
+  const STORAGE_KEY = "rowda-finance-transactions";
 
   const totalIncomeEl = document.getElementById("total-income");
   const totalOutcomeEl = document.getElementById("total-outcome");
@@ -606,78 +440,39 @@
   const list = document.getElementById("list");
   const emptyState = document.getElementById("empty-state");
 
-  let authMode = "signin";
   let currentType = "income";
   let transactions = [];
-  let unsubscribe = null;
+
+  function loadTransactions() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      transactions = raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      transactions = [];
+    }
+  }
+
+  function saveTransactions() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+    } catch (e) {
+      statusLine.textContent = "Could not save — your browser storage may be full or blocked.";
+    }
+  }
 
   function fmt(n) {
     const v = Math.round(Math.abs(n) * 100) / 100;
     return "$" + v.toLocaleString(undefined, { minimumFractionDigits: v % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 });
   }
 
-  function setAuthMode(mode) {
-    authMode = mode;
-    modeSigninBtn.classList.toggle("active", mode === "signin");
-    modeSignupBtn.classList.toggle("active", mode === "signup");
-    authSubmitBtn.textContent = mode === "signin" ? "Sign In" : "Create Account";
-    authPassword.autocomplete = mode === "signin" ? "current-password" : "new-password";
-    authStatus.textContent = "";
-  }
-
-  modeSigninBtn.addEventListener("click", () => setAuthMode("signin"));
-  modeSignupBtn.addEventListener("click", () => setAuthMode("signup"));
-
-  async function submitAuth() {
-    const email = authEmail.value.trim();
-    const password = authPassword.value;
-    if (!email || !password) {
-      authStatus.textContent = "Enter both an email and a password.";
-      return;
-    }
-    if (password.length < 6) {
-      authStatus.textContent = "Password must be at least 6 characters.";
-      return;
-    }
-    authSubmitBtn.disabled = true;
-    authStatus.textContent = "";
-    try {
-      if (authMode === "signin") {
-        await auth.signInWithEmailAndPassword(email, password);
-      } else {
-        await auth.createUserWithEmailAndPassword(email, password);
-      }
-    } catch (e) {
-      authStatus.textContent = friendlyAuthError(e);
-    }
-    authSubmitBtn.disabled = false;
-  }
-
-  function friendlyAuthError(e) {
-    switch (e.code) {
-      case "auth/invalid-email": return "That email address looks invalid.";
-      case "auth/user-not-found": return "No account found with that email. Try Create Account.";
-      case "auth/wrong-password": return "Incorrect password.";
-      case "auth/email-already-in-use": return "That email already has an account. Try Sign In.";
-      case "auth/weak-password": return "Password must be at least 6 characters.";
-      case "auth/invalid-credential": return "Email or password is incorrect.";
-      default: return "Something went wrong. Please try again.";
-    }
-  }
-
-  authSubmitBtn.addEventListener("click", submitAuth);
-  authPassword.addEventListener("keydown", (e) => { if (e.key === "Enter") submitAuth(); });
-
-  signoutBtn.addEventListener("click", () => auth.signOut());
-
-  typeIncomeBtn.addEventListener("click", () => setType("income"));
-  typeOutcomeBtn.addEventListener("click", () => setType("outcome"));
-
   function setType(type) {
     currentType = type;
     typeIncomeBtn.classList.toggle("active", type === "income");
     typeOutcomeBtn.classList.toggle("active", type === "outcome");
   }
+
+  typeIncomeBtn.addEventListener("click", () => setType("income"));
+  typeOutcomeBtn.addEventListener("click", () => setType("outcome"));
 
   function dayKey(ts) {
     const d = new Date(ts);
@@ -774,86 +569,47 @@
     }
   }
 
-  async function addTransaction() {
+  function addTransaction() {
     const description = descInput.value.trim();
     const amount = parseFloat(amountInput.value);
     if (!amount || amount <= 0) {
       statusLine.textContent = "Enter an amount greater than zero.";
       return;
     }
-    const user = auth.currentUser;
-    if (!user) return;
-    addBtn.disabled = true;
-    statusLine.textContent = "Adding...";
-    try {
-      await db.collection("transactions").add({
-        ownerUid: user.uid,
-        type: currentType,
-        amount: amount,
-        description: description || null,
-        createdAt: Date.now(),
-      });
-      descInput.value = "";
-      amountInput.value = "";
-      statusLine.textContent = "";
-      descInput.focus();
-    } catch (e) {
-      statusLine.textContent = "Adding failed, please try again.";
-      console.error(e);
-    }
-    addBtn.disabled = false;
+    transactions.push({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+      type: currentType,
+      amount: amount,
+      description: description || null,
+      createdAt: Date.now(),
+    });
+    saveTransactions();
+    descInput.value = "";
+    amountInput.value = "";
+    statusLine.textContent = "";
+    render();
+    descInput.focus();
   }
 
   addBtn.addEventListener("click", addTransaction);
   amountInput.addEventListener("keydown", (e) => { if (e.key === "Enter") addTransaction(); });
   descInput.addEventListener("keydown", (e) => { if (e.key === "Enter") addTransaction(); });
 
-  async function deleteTransaction(id) {
+  function deleteTransaction(id) {
     if (!confirm("Delete this transaction?")) return;
-    try {
-      await db.collection("transactions").doc(id).delete();
-    } catch (e) {
-      statusLine.textContent = "Deleting failed, please try again.";
-      console.error(e);
-    }
+    transactions = transactions.filter((t) => t.id !== id);
+    saveTransactions();
+    render();
   }
-
-  auth.onAuthStateChanged((user) => {
-    if (unsubscribe) {
-      unsubscribe();
-      unsubscribe = null;
-    }
-    const isRealUser = user && !user.isAnonymous;
-    if (isRealUser) {
-      authScreen.hidden = true;
-      mainScreen.hidden = false;
-      accountEmail.textContent = user.email;
-      transactions = [];
-      render();
-      unsubscribe = db.collection("transactions")
-        .where("ownerUid", "==", user.uid)
-        .onSnapshot(
-          (snap) => {
-            transactions = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
-            render();
-          },
-          (err) => {
-            statusLine.textContent = "Something went wrong while loading your data.";
-            console.error(err);
-          }
-        );
-    } else {
-      mainScreen.hidden = true;
-      authScreen.hidden = false;
-      authEmail.focus();
-    }
-  });
 
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("sw.js").catch(() => {});
     });
   }
+
+  loadTransactions();
+  render();
 })();
 </script>
 </body>

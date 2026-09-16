@@ -1,7 +1,7 @@
 {
   "name": "Rowda Finance",
   "short_name": "Rowda Finance",
-  "description": "A personal income and outcome tracker that stays in sync across your devices.",
+  "description": "A personal income and outcome tracker.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
