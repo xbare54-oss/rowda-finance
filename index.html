@@ -441,6 +441,85 @@
 
   [hidden] { display: none !important; }
 
+  /* ---------- lock screen ---------- */
+
+  .lock-screen {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    min-height: 100vh;
+  }
+
+  .lock-card {
+    width: 100%;
+    max-width: 300px;
+    text-align: center;
+  }
+
+  .lock-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 999px;
+    object-fit: cover;
+    border: 1px solid var(--line);
+    margin: 0 auto 16px;
+    display: block;
+  }
+
+  .lock-glyph {
+    font-size: 34px;
+    margin-bottom: 10px;
+  }
+
+  .lock-card h1 {
+    font-size: 20px;
+    text-align: center;
+  }
+
+  .lock-card .subhead {
+    text-align: center;
+    margin-bottom: 22px;
+  }
+
+  .unlock-btn {
+    width: 100%;
+    height: 44px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .unlock-btn:hover { filter: brightness(1.08); }
+
+  .lock-status {
+    font-size: 12.5px;
+    color: var(--outcome);
+    margin-top: 12px;
+    min-height: 14px;
+  }
+
+  .lock-btn {
+    flex: 0 0 auto;
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: 2px;
+  }
+
+  .lock-btn:hover { background: var(--income-soft); color: var(--ink); }
+  .lock-btn.on { border-color: var(--accent); color: var(--accent); background: var(--income-soft); }
+
   @media (max-width: 460px) {
     .app { border-inline: none; }
     header, .filters, .summary, .composer, .list { padding-left: 16px; padding-right: 16px; }
@@ -449,7 +528,18 @@
 </head>
 <body>
 
-<div class="app">
+<div class="lock-screen" id="lock-screen" hidden>
+  <div class="lock-card">
+    <img class="lock-avatar" src="icons/profile-96.png" alt="Abdulaahi Muhumed">
+    <div class="eyebrow">Personal Ledger</div>
+    <h1>Locked</h1>
+    <div class="subhead">Verify it's you to open your ledger.</div>
+    <button class="unlock-btn" id="unlock-btn" type="button">&#128272; Unlock</button>
+    <div class="lock-status" id="lock-status"></div>
+  </div>
+</div>
+
+<div class="app" id="main-app">
 
   <header>
     <div class="header-top">
@@ -460,7 +550,10 @@
           <h1>Abdulaahi Muhumed</h1>
         </div>
       </div>
-      <button class="install-btn" id="install-btn" type="button" hidden>Install App</button>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+        <button class="lock-btn" id="lock-toggle-btn" type="button" title="Enable biometric lock" hidden>&#128275;</button>
+        <button class="install-btn" id="install-btn" type="button" hidden>Install App</button>
+      </div>
     </div>
     <div class="subhead">Track what comes in and what goes out.</div>
   </header>
@@ -555,6 +648,137 @@
     installBtn.hidden = true;
     deferredInstallPrompt = null;
   });
+
+  // ---------- biometric lock ----------
+  const LOCK_ENABLED_KEY = "rowda-finance-lock-enabled";
+  const LOCK_CRED_KEY = "rowda-finance-lock-credential-id";
+  const lockToggleBtn = document.getElementById("lock-toggle-btn");
+  const lockScreen = document.getElementById("lock-screen");
+  const mainApp = document.getElementById("main-app");
+  const unlockBtn = document.getElementById("unlock-btn");
+  const lockStatus = document.getElementById("lock-status");
+
+  // Hide the ledger immediately (before any async check) if a lock was
+  // previously set up, so real data never flashes on screen first.
+  if (localStorage.getItem(LOCK_ENABLED_KEY) === "1" && localStorage.getItem(LOCK_CRED_KEY)) {
+    lockScreen.hidden = false;
+    mainApp.hidden = true;
+  }
+
+  function bufToBase64url(buf) {
+    const bytes = new Uint8Array(buf);
+    let str = "";
+    for (const b of bytes) str += String.fromCharCode(b);
+    return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+
+  function base64urlToBuf(str) {
+    const padded = str.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((str.length + 3) % 4);
+    const bin = atob(padded);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes.buffer;
+  }
+
+  async function biometricSupported() {
+    return !!(window.PublicKeyCredential &&
+      navigator.credentials &&
+      (await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(() => false)));
+  }
+
+  function isLockEnabled() {
+    return localStorage.getItem(LOCK_ENABLED_KEY) === "1" && !!localStorage.getItem(LOCK_CRED_KEY);
+  }
+
+  function updateLockBtn() {
+    const on = isLockEnabled();
+    lockToggleBtn.classList.toggle("on", on);
+    lockToggleBtn.title = on ? "Turn off biometric lock" : "Enable biometric lock";
+  }
+
+  async function registerBiometric() {
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const userId = crypto.getRandomValues(new Uint8Array(16));
+    const credential = await navigator.credentials.create({
+      publicKey: {
+        challenge,
+        rp: { name: "Abdulaahi Muhumed" },
+        user: { id: userId, name: "owner", displayName: "Abdulaahi Muhumed" },
+        pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
+        authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
+        timeout: 60000,
+      },
+    });
+    if (!credential) throw new Error("no credential");
+    localStorage.setItem(LOCK_CRED_KEY, bufToBase64url(credential.rawId));
+    localStorage.setItem(LOCK_ENABLED_KEY, "1");
+  }
+
+  async function verifyBiometric() {
+    const credId = localStorage.getItem(LOCK_CRED_KEY);
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const assertion = await navigator.credentials.get({
+      publicKey: {
+        challenge,
+        allowCredentials: [{ id: base64urlToBuf(credId), type: "public-key" }],
+        userVerification: "required",
+        timeout: 60000,
+      },
+    });
+    if (!assertion) throw new Error("no assertion");
+  }
+
+  function showLockScreen() {
+    lockScreen.hidden = false;
+    mainApp.hidden = true;
+  }
+
+  function showMainApp() {
+    lockScreen.hidden = true;
+    mainApp.hidden = false;
+  }
+
+  lockToggleBtn.addEventListener("click", async () => {
+    if (isLockEnabled()) {
+      if (!confirm("Turn off biometric lock? Anyone with this device will be able to open the app.")) return;
+      localStorage.removeItem(LOCK_ENABLED_KEY);
+      localStorage.removeItem(LOCK_CRED_KEY);
+      updateLockBtn();
+      return;
+    }
+    try {
+      await registerBiometric();
+      updateLockBtn();
+      alert("Biometric lock enabled. You'll be asked to verify next time you open the app.");
+    } catch (e) {
+      console.error(e);
+      alert("Could not set up biometric lock on this device.");
+    }
+  });
+
+  unlockBtn.addEventListener("click", async () => {
+    lockStatus.textContent = "";
+    unlockBtn.disabled = true;
+    try {
+      await verifyBiometric();
+      showMainApp();
+    } catch (e) {
+      lockStatus.textContent = "Verification failed. Try again.";
+      console.error(e);
+    }
+    unlockBtn.disabled = false;
+  });
+
+  async function initLock() {
+    const supported = await biometricSupported();
+    lockToggleBtn.hidden = !supported;
+    updateLockBtn();
+    if (supported && isLockEnabled()) {
+      showLockScreen();
+    } else {
+      showMainApp();
+    }
+  }
 
   let currentType = "income";
   let transactions = [];
@@ -776,6 +1000,7 @@
 
   loadTransactions();
   render();
+  initLock();
 })();
 </script>
 </body>
