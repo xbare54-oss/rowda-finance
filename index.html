@@ -156,6 +156,43 @@
 
   .install-btn:hover { background: var(--income-soft); }
 
+  /* ---------- filters ---------- */
+
+  .filters {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 14px 20px 0;
+  }
+
+  .filters .field { flex: 0 0 auto; }
+
+  select {
+    font-family: "Work Sans", system-ui, sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 9px 10px;
+    min-width: 160px;
+  }
+
+  .filter-reset {
+    height: 36px;
+    padding: 0 12px;
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--ink-soft);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: "Work Sans", system-ui, sans-serif;
+  }
+
+  .filter-reset:hover { color: var(--ink); background: var(--income-soft); }
+
   /* ---------- summary ---------- */
 
   .summary {
@@ -406,7 +443,7 @@
 
   @media (max-width: 460px) {
     .app { border-inline: none; }
-    header, .summary, .composer, .list { padding-left: 16px; padding-right: 16px; }
+    header, .filters, .summary, .composer, .list { padding-left: 16px; padding-right: 16px; }
   }
 </style>
 </head>
@@ -428,13 +465,23 @@
     <div class="subhead">Track what comes in and what goes out.</div>
   </header>
 
+  <div class="filters">
+    <div class="field">
+      <label for="month-filter">Month</label>
+      <select id="month-filter">
+        <option value="">All Time</option>
+      </select>
+    </div>
+    <button class="filter-reset" id="filter-reset-btn" type="button">Reset</button>
+  </div>
+
   <div class="summary">
     <div class="stat-tile income">
-      <div class="label">Income</div>
+      <div class="label" id="income-label">Income</div>
       <div class="value" id="total-income">$0</div>
     </div>
     <div class="stat-tile outcome">
-      <div class="label">Outcome</div>
+      <div class="label" id="outcome-label">Outcome</div>
       <div class="value" id="total-outcome">$0</div>
     </div>
     <div class="stat-tile balance" id="balance-tile">
@@ -488,6 +535,8 @@
   const list = document.getElementById("list");
   const emptyState = document.getElementById("empty-state");
   const installBtn = document.getElementById("install-btn");
+  const monthFilter = document.getElementById("month-filter");
+  const filterResetBtn = document.getElementById("filter-reset-btn");
 
   let deferredInstallPrompt = null;
   window.addEventListener("beforeinstallprompt", (e) => {
@@ -556,17 +605,56 @@
     const yestKey = dayKey(Date.now() - 86400000);
     if (key === today) return "Today";
     if (key === yestKey) return "Yesterday";
-    return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+    return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" });
   }
 
   function timeLabel(ts) {
     return new Date(ts).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
   }
 
+  function monthKey(ts) {
+    const d = new Date(ts);
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+  }
+
+  function monthLabel(key) {
+    const [y, m] = key.split("-").map(Number);
+    const date = new Date(y, m - 1, 1);
+    return date.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  }
+
+  function populateMonthFilter() {
+    const months = Array.from(new Set(transactions.map((t) => monthKey(t.createdAt))))
+      .sort((a, b) => b.localeCompare(a));
+    const current = monthFilter.value;
+    monthFilter.innerHTML = '<option value="">All Time</option>';
+    for (const key of months) {
+      const opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = monthLabel(key);
+      monthFilter.appendChild(opt);
+    }
+    if (months.includes(current)) monthFilter.value = current;
+  }
+
+  function getFilteredTransactions() {
+    const month = monthFilter.value;
+    if (!month) return transactions;
+    return transactions.filter((t) => monthKey(t.createdAt) === month);
+  }
+
+  monthFilter.addEventListener("change", render);
+  filterResetBtn.addEventListener("click", () => {
+    monthFilter.value = "";
+    render();
+  });
+
   function render() {
+    populateMonthFilter();
+    const filtered = getFilteredTransactions();
     let income = 0;
     let outcome = 0;
-    for (const t of transactions) {
+    for (const t of filtered) {
       if (t.type === "income") income += t.amount;
       else outcome += t.amount;
     }
@@ -578,13 +666,16 @@
     balanceTile.classList.toggle("negative", balance < 0);
 
     list.innerHTML = "";
-    if (transactions.length === 0) {
+    if (filtered.length === 0) {
       list.appendChild(emptyState);
+      emptyState.querySelector("p").textContent = monthFilter.value
+        ? "No transactions in this month."
+        : "No transactions yet. Add your first income or outcome above.";
       return;
     }
 
     const byDay = new Map();
-    for (const t of transactions) {
+    for (const t of filtered) {
       const key = dayKey(t.createdAt);
       if (!byDay.has(key)) byDay.set(key, []);
       byDay.get(key).push(t);
