@@ -624,8 +624,16 @@
   }
 
   function populateMonthFilter() {
-    const months = Array.from(new Set(transactions.map((t) => monthKey(t.createdAt))))
-      .sort((a, b) => b.localeCompare(a));
+    const monthSet = new Set(transactions.map((t) => monthKey(t.createdAt)));
+    // Always offer the last 12 months so the filter is usable even before
+    // any transaction has been added yet.
+    const cursor = new Date();
+    cursor.setDate(1);
+    for (let i = 0; i < 12; i++) {
+      monthSet.add(cursor.getFullYear() + "-" + String(cursor.getMonth() + 1).padStart(2, "0"));
+      cursor.setMonth(cursor.getMonth() - 1);
+    }
+    const months = Array.from(monthSet).sort((a, b) => b.localeCompare(a));
     const current = monthFilter.value;
     monthFilter.innerHTML = '<option value="">All Time</option>';
     for (const key of months) {
