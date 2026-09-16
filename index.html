@@ -823,7 +823,8 @@
       unsubscribe();
       unsubscribe = null;
     }
-    if (user) {
+    const isRealUser = user && !user.isAnonymous;
+    if (isRealUser) {
       authScreen.hidden = true;
       mainScreen.hidden = false;
       accountEmail.textContent = user.email;
